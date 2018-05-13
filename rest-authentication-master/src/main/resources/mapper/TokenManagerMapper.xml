@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.secure.token.dao.TokenManagerMapper">
+
+    <select id="findTokenCount" resultType="java.lang.Integer" parameterType="java.lang.String">
+        SELECT COUNT(1) FROM rest_token WHERE token = #{token}
+    </select>
+
+    <insert id="addToken" parameterType="java.util.Map">
+        INSERT INTO rest_token(username,token,create_time) VALUES (#{username},#{token},now())
+    </insert>
+
+    <update id="invalidUserToken" parameterType="java.lang.String">
+        update rest_token set expiried_time = now() where username = #{username} and expiried_time is null
+    </update>
+
+    <update id="invalidUserTokenByToken" parameterType="java.lang.String">
+        update rest_token set expiried_time = now() where token = #{token}
+    </update>
+
+    <select id="getUserTokens" resultType="java.lang.String" parameterType="java.lang.String">
+        SELECT token FROM rest_token WHERE username = #{username} and expiried_time is null
+    </select>
+
+    <select id="getValidUser" resultType="java.lang.String">
+        SELECT username FROM rest_token WHERE expiried_time is null
+    </select>
+
+    <select id="getUserByToken" resultType="java.util.HashMap" parameterType="java.lang.String">
+        select u.username, u.password,a.authority
+        from users u,group_members m,group_authorities a, rest_token t
+        where u.username = m.username and m.group_id = a.group_id
+              and u.username = t.username and t.expiried_time is null
+              and t.token = #{token}
+    </select>
+
+    <select id="getUserByUsername" resultType="java.util.HashMap" parameterType="java.lang.String">
+        select u.username, u.password,a.authority
+        from users u,group_members m,group_authorities a
+        where u.username = m.username and m.group_id = a.group_id and u.username = #{username}
+    </select>
+</mapper>
